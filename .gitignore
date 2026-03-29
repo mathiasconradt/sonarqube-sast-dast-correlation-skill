@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
+
+# Claude Code
+.claude/
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+
+# Output files (examples are kept in examples/ directory)
+sonar_issues.json
+correlations.json
+sast-dast-correlation-report.md
+existing_tagged_issues.json
+
+# SARIF files (examples are kept in examples/ directory)
+*.sarif
+
+# Environment variables
+.env
+.env.local
+
+# OS
+Thumbs.db
