@@ -59,7 +59,7 @@ Security testing often involves running both SAST and DAST tools independently, 
 ```bash
 # Clone this repository to your Claude Code skills directory
 cd ~/.claude/skills
-git clone https://github.com/YOUR_USERNAME/sonarqube-sast-dast-correlation.git
+git clone https://github.com/mathiasconradt/sonarqube-sast-dast-correlation.git
 
 # Or manually download and extract to:
 # ~/.claude/skills/sonarqube-sast-dast-correlation/
@@ -357,7 +357,7 @@ Built with [Claude Code](https://claude.ai/code) by Anthropic.
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/sonarqube-sast-dast-correlation/issues)
+- **Issues**: [GitHub Issues](https://github.com/mathiasconradt/sonarqube-sast-dast-correlation/issues)
 - **Documentation**: See [SKILL.md](SKILL.md) for detailed implementation workflow
 - **Claude Code**: [claude.ai/code](https://claude.ai/code)
 

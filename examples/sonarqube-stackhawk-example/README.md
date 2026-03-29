@@ -186,11 +186,6 @@ Full correlation analysis showing SonarQube SAST findings mapped to StackHawk DA
 
 ![SonarQube StackHawk Example](sonarqube-stackhawk-example.png)
 
-## Related Examples
-
-- **SonarQube + ZAP**: See `../sonarqube-zap-example/` (coming soon)
-- **Multi-Tool Comparison**: See `../multi-tool-example/` (coming soon)
-
 ---
 
 **Note**: This example uses a test application with intentional vulnerabilities. Always fix security issues in production code immediately.

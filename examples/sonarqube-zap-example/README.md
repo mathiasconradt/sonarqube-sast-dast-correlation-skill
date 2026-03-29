@@ -256,11 +256,6 @@ Full correlation analysis showing SonarQube SAST findings mapped to OWASP ZAP DA
 
 ![SonarQube ZAP Example](sonarqube-zap-example.png)
 
-## Related Examples
-
-- **SonarQube + StackHawk**: See `../sonarqube-stackhawk-example/` for comparison
-- **Examples Overview**: See `../README.md`
-
 ---
 
 **Note**: This example uses a test application with intentional vulnerabilities. Always fix security issues in production code immediately.
