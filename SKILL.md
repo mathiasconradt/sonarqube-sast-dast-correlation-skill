@@ -163,6 +163,14 @@ Output to correlations.json with structure:
 
 Create a comprehensive report: `sast-dast-correlation-report.md`
 
+**Icon Mapping (Severity-Based):**
+
+Use icons based on SAST severity levels (NOT vulnerability type):
+- 🔴 Red = BLOCKER or CRITICAL severity
+- 🟠 Orange = MAJOR or HIGH severity
+- 🟡 Yellow = MINOR or MEDIUM severity
+- 🔵 Blue = INFO or LOW severity
+
 **Report Structure:**
 
 ```markdown
@@ -205,7 +213,7 @@ Create a comprehensive report: `sast-dast-correlation-report.md`
 #### SAST Finding (Code Analysis)
 
 - **Rule:** `{rule}`
-- **Severity:** {severity} 🔴
+- **Severity:** {severity} {icon}
 - **File:** `{component}`
 - **Line:** {line}
 - **Issue:** {message}
@@ -215,7 +223,7 @@ Create a comprehensive report: `sast-dast-correlation-report.md`
 #### DAST Finding (Runtime Testing)
 
 - **Rule:** `{ruleId}`
-- **Severity:** {level} 🔴
+- **Severity:** {level}
 - **Method:** {HTTP method}
 - **Endpoint:** `{URI}`
 - **Issue:** {message}
@@ -355,7 +363,7 @@ When executing this skill:
          ```
       2. For each issue found:
          - Get the issue details including comments
-         - Find and delete comments that contain "DAST Correlation" or "🔴 DAST Correlation" using:
+         - Find and delete comments that contain "DAST Correlation" (any icon variant) using:
            ```bash
            curl -u "$SONAR_TOKEN:" -X POST "{SONARQUBE_URL}/api/issues/delete_comment" \
              -d "comment={comment_key}"
@@ -388,7 +396,9 @@ When executing this skill:
           --data-urlencode "text={correlation_details}"
         ```
       - The comment should include:
-        - 🔴 DAST Correlation - HIGH CONFIDENCE header (for easy identification)
+        - {icon} DAST Correlation - HIGH CONFIDENCE header (icon based on SAST severity: 🔴=BLOCKER/CRITICAL, 🟠=MAJOR/HIGH, 🟡=MINOR/MEDIUM, 🔵=INFO/LOW)
+        - Vulnerability type (SQL Injection, XSS, etc.)
+        - SAST severity level
         - Correlation confidence level
         - DAST tool and finding details
         - Correlation reasoning (from the markdown report)
@@ -413,6 +423,7 @@ User: "Compare SonarQube and StackHawk results"
 ✅ **Use Agent tool** for correlation - it provides deeper reasoning than simple scripts
 ✅ **Match vulnerability types precisely** - SQL injection to sql-injection, XSS to cross-site-scripting
 ✅ **Trace code paths to endpoints** - SearchRepository.java → POST / endpoint
+✅ **Use severity-based icons** - 🔴 BLOCKER/CRITICAL, 🟠 MAJOR/HIGH, 🟡 MINOR/MEDIUM, 🔵 INFO/LOW (NOT based on vulnerability type)
 ✅ **Emphasize correlated findings** - these have highest confidence and priority
 ✅ **Provide direct links** to both SonarQube and DAST tool UIs for each issue
 ✅ **Use detected credentials automatically** - When all required config values are found (URL, token, projectKey), use them without asking the user
