@@ -2,7 +2,9 @@
 
 ## 0. Check for Existing Report
 
-Before starting the analysis, check if `sast-dast-correlation-report.md` already exists in the current directory.
+**IMPORTANT:** Create `.sonar/` directory if it doesn't exist: `mkdir -p .sonar`
+
+Before starting the analysis, check if `.sonar/sast-dast-correlation-report.md` already exists.
 
 If it exists:
 1. Use AskUserQuestion to ask the user:
@@ -44,24 +46,26 @@ After gathering available values:
 
 ## 2. Retrieve SAST Issues
 
-1. Check if `sonar_issues.json` exists in the current directory
+1. Check if `.sonar/sonar_issues.json` exists
 2. If it exists:
    - Ask user if they want to use this file or fetch fresh data
 3. If not exists or user wants fresh data:
    - Use the SonarQube API to fetch issues:
+     ```bash
+     curl -s -u "$SONAR_TOKEN:" \
+       "{SONARQUBE_URL}/api/issues/search?componentKeys={projectKey}&statuses=OPEN,CONFIRMED,REOPENED&ps=500" \
+       -o .sonar/sonar_issues.json
      ```
-     GET {SONARQUBE_URL}/api/issues/search?componentKeys={projectKey}&statuses=OPEN,CONFIRMED,REOPENED&ps=500
-     ```
-   - Save the response to `sonar_issues.json`
    - Handle pagination if more than 500 issues exist
 
 **CRITICAL: Filter out imported DAST issues from SAST data**
 
-4. After loading `sonar_issues.json`, filter out any issues with rules starting with `external_StackHawk:` or other external tool prefixes
+4. After loading `.sonar/sonar_issues.json`, filter out any issues with rules starting with `external_StackHawk:` or other external tool prefixes
    - These are DAST findings that were imported into SonarQube
    - Only keep TRUE SAST issues (code analysis findings)
    - Track how many issues were filtered for reporting
    - Example: If there are 24 total issues and 12 are `external_StackHawk:*`, keep only the 12 true SAST issues
+   - Save filtered results to `.sonar/sast_issues_filtered.json`
 
 ## 3. Retrieve DAST Issues
 

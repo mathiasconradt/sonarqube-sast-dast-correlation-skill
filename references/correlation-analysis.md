@@ -108,7 +108,7 @@ For each correlation found, provide:
 - Detailed correlation reasoning explaining WHY they match (including category/CWE match)
 - Confidence level (high/medium/low)
 
-Output to correlations.json with structure:
+Output to `.sonar/correlations.json` with structure:
 {
   'correlations': [
     {

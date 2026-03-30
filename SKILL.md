@@ -12,7 +12,9 @@ Generate a comprehensive security correlation report that maps SonarQube SAST fi
 
 ## Workflow Overview
 
-1. **Check for Existing Report** - Look for existing `sast-dast-correlation-report.md` and offer to open it or rerun analysis
+**⚠️ IMPORTANT:** All generated files are stored in `.sonar/` subdirectory to keep the project root clean. Create this directory at the start if it doesn't exist.
+
+1. **Check for Existing Report** - Look for existing `.sonar/sast-dast-correlation-report.md` and offer to open it or rerun analysis
 2. **Gather Configuration** - Auto-detect SonarQube credentials from environment variables or config files
 3. **Retrieve SAST Issues** - Fetch or reuse SonarQube issues, filtering out imported DAST issues
 4. **Retrieve DAST Issues** - Select and parse SARIF files from DAST tools (StackHawk, ZAP, etc.)
@@ -20,25 +22,36 @@ Generate a comprehensive security correlation report that maps SonarQube SAST fi
 6. **Validate Correlation Results** - Verify match quality before proceeding to report generation
 7. **Generate Report** - Create comprehensive markdown report with severity analysis and recommendations
 8. **Open in Browser** - Automatically open the report for review
-9. **Tag Issues (Optional)** - Tag correlated issues in SonarQube for team tracking
+9. **Tag Issues (Optional)** - Tag correlated issues in SonarQube with `dast-detected` tag and add detailed correlation comments
 
 **📖 For detailed workflow steps, see [Workflow Steps](references/workflow-steps.md)**
+
+## ⚠️ CRITICAL: Issue Tagging Rules
+
+**Tag name:** `dast-detected` (ONLY this tag, no others!)
+**Workflow:** Clear old tags/comments → Tag new correlations → Add detailed comments
+**Comment format:** `{icon} **DAST Correlation - {CONFIDENCE}**` with endpoint/parameter verification details
+
+**📖 For complete tagging workflow with API commands, see [Implementation Guide - Step 10](references/implementation-guide.md)**
 
 ## Step 3: Fetch SonarQube Issues (SAST)
 
 Use the SonarQube REST API to retrieve issues. Filter out imported DAST issues (e.g., `external_StackHawk:`):
 
 ```bash
+# Create .sonar directory if it doesn't exist
+mkdir -p .sonar
+
 # Fetch all issues for a project (replace values as needed)
 curl -s -u "$SONAR_TOKEN:" \
   "https://sonarqube.example.com/api/issues/search?projectKeys=my-project&ps=500&p=1" \
-  -o sonar_issues.json
+  -o .sonar/sonar_issues.json
 
 # Filter out imported external issues
-jq '[.issues[] | select(.rule | startswith("external_") | not)]' sonar_issues.json > sast_issues_filtered.json
+jq '[.issues[] | select(.rule | startswith("external_") | not)]' .sonar/sonar_issues.json > .sonar/sast_issues_filtered.json
 
 # Verify issue count
-jq 'length' sast_issues_filtered.json
+jq 'length' .sonar/sast_issues_filtered.json
 ```
 
 ## Step 4: Find and Parse SARIF Files (DAST)
@@ -75,17 +88,17 @@ Use an Agent to perform intelligent correlation by matching SAST and DAST findin
 ```bash
 # Example: build a candidate correlation list by joining on normalised category
 jq -n \
-  --slurpfile sast sast_issues_filtered.json \
-  --slurpfile dast dast_findings.json \
+  --slurpfile sast .sonar/sast_issues_filtered.json \
+  --slurpfile dast .sonar/dast_findings.json \
   '[
     $sast[][] as $s |
     $dast[][] as $d |
     select($s.category == $d.category) |
     {sast_key: $s.key, dast_ruleId: $d.ruleId, file: $s.component, url: $d.uri, category: $s.category}
-  ]' > candidate_correlations.json
+  ]' > .sonar/candidate_correlations.json
 ```
 
-After generating candidates, read the relevant source files to verify endpoint mappings and promote/demote confidence levels. Write the final result to `correlations.json`.
+After generating candidates, read the relevant source files to verify endpoint mappings and promote/demote confidence levels. Write the final result to `.sonar/correlations.json`.
 
 **📖 For complete correlation rules and validation logic, see [Correlation Analysis](references/correlation-analysis.md)**
 
@@ -95,10 +108,10 @@ Before generating the report, verify correlation quality:
 
 ```bash
 # Check total correlation count
-jq 'length' correlations.json
+jq 'length' .sonar/correlations.json
 
 # Break down by confidence level
-jq 'group_by(.confidence) | map({confidence: .[0].confidence, count: length})' correlations.json
+jq 'group_by(.confidence) | map({confidence: .[0].confidence, count: length})' .sonar/correlations.json
 ```
 
 - If zero correlations are found, **stop and inform the user** before proceeding. The most common cause is that SAST and DAST scanned different applications or found completely different vulnerability categories. Ask the user to confirm both tools targeted the same application.
@@ -107,7 +120,7 @@ jq 'group_by(.confidence) | map({confidence: .[0].confidence, count: length})' c
 
 ## Report Generation
 
-Using `correlations.json`, `sast_issues_filtered.json`, and the SARIF findings, write `sast-dast-correlation-report.md` with the following sections in order:
+Using `.sonar/correlations.json`, `.sonar/sast_issues_filtered.json`, and the SARIF findings, write `.sonar/sast-dast-correlation-report.md` with the following sections in order:
 
 1. **Executive Summary** — total SAST issues, total DAST findings, total correlations, and overall risk posture
 2. **Severity Distribution** — table breaking down findings by critical/high/medium/low across both tools
@@ -121,7 +134,7 @@ Using `correlations.json`, `sast_issues_filtered.json`, and the SARIF findings, 
 
 ## Error Handling
 
-- If SonarQube API is unreachable, inform the user and offer to work with existing `sonar_issues.json`
+- If SonarQube API is unreachable, inform the user and offer to work with existing `.sonar/sonar_issues.json`
 - If no SARIF files are found, inform the user and ask for a file path
 - Validate SARIF file format with `jq .runs[0].results` before processing; if invalid, prompt the user to verify the file
 - Remember to filter out `external_StackHawk:` or similar imported issues from SAST data
@@ -129,9 +142,14 @@ Using `correlations.json`, `sast_issues_filtered.json`, and the SARIF findings, 
 
 ## Output Files
 
-- `sonar_issues.json` - SAST issues from SonarQube (if created)
-- `correlations.json` - Correlation analysis results from Agent (intermediate file)
-- `sast-dast-correlation-report.md` - Final correlation report with detailed findings
+**All files are created in `.sonar/` subdirectory:**
+
+- `.sonar/sonar_issues.json` - SAST issues from SonarQube (if created)
+- `.sonar/sast_issues_filtered.json` - SAST issues with external imports filtered out
+- `.sonar/correlations.json` - Correlation analysis results from Agent (intermediate file)
+- `.sonar/sast-dast-correlation-report.md` - Final correlation report with detailed findings
+
+**Recommended:** Add `.sonar/` to your `.gitignore` to exclude generated files from version control.
 
 ## Additional Resources
 
@@ -142,6 +160,9 @@ Using `correlations.json`, `sast_issues_filtered.json`, and the SARIF findings, 
 - [Implementation Guide](references/implementation-guide.md) - Step-by-step implementation workflow and key success factors
 
 **Examples and Reference:**
+- [Changelog](references/CHANGELOG.md) - Version history and release notes
+- [Contributing Guidelines](references/CONTRIBUTING.md) - How to contribute to this skill
+- [License](references/LICENSE) - MIT License details
 - [Examples Overview](references/examples/README.md) - Collection of example correlation reports
   - [SonarQube + ZAP Example](references/examples/sonarqube-zap-example/README.md) - Java Spring Boot application example
   - [SonarQube + StackHawk Example](references/examples/sonarqube-stackhawk-example/README.md) - Java Spring Boot application example

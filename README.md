@@ -6,6 +6,16 @@
 
 A Claude Code skill that intelligently correlates Static Application Security Testing (SAST) findings from SonarQube with Dynamic Application Security Testing (DAST) findings from SARIF files (StackHawk, ZAP, etc.) to generate comprehensive security correlation reports.
 
+## ⚠️ Quick Reference: Issue Tagging
+
+When tagging correlated issues in SonarQube:
+- **Tag**: Use ONLY `dast-detected` (no other tags!)
+- **Cleanup**: Automatically removes ALL existing `dast-detected` tags and correlation comments before tagging
+- **Comments**: Adds detailed correlation comment with severity icon, confidence, endpoint/parameter verification
+- **Format**: `{icon} **DAST Correlation - {CONFIDENCE}**` (🔴=BLOCKER/CRITICAL, 🟠=MAJOR, 🟡=MINOR, 🔵=INFO)
+
+See [Implementation Guide - Step 10](references/implementation-guide.md) for complete tagging workflow.
+
 ## Overview
 
 Security testing often involves running both SAST and DAST tools independently, but manually correlating their findings is time-consuming and error-prone. This skill automates the correlation process using AI-powered analysis to:

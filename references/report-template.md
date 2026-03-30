@@ -1,6 +1,8 @@
 # Report Generation Template
 
-Create a comprehensive report: `sast-dast-correlation-report.md`
+Create a comprehensive report: `.sonar/sast-dast-correlation-report.md`
+
+**Note:** All generated files are stored in `.sonar/` subdirectory to keep the project root clean.
 
 ## Icon Mapping (Severity-Based)
 
