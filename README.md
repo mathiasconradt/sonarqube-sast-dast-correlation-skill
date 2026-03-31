@@ -16,6 +16,27 @@ When tagging correlated issues in SonarQube:
 
 See [Implementation Guide - Step 10](references/implementation-guide.md) for complete tagging workflow.
 
+## ⚠️ CRITICAL: What is a TRUE Correlation?
+
+**TRUE Correlation** = Issue detected by BOTH SonarQube SAST AND DAST tools
+
+✅ **Requirements for TRUE correlation:**
+- Must have a valid SonarCloud/SonarQube issue key (e.g., `AZ1EQ_E8sAPSAinx9_u2`)
+- Must have a matching DAST finding from SARIF file
+- Vulnerability category must match (SQL injection ↔ SQL injection, XSS ↔ XSS, etc.)
+- Endpoint/file location must match
+
+❌ **NOT a correlation:**
+- DAST finding with no corresponding SAST issue (even if you can find the code manually)
+- Configuration issues detected by DAST but not flagged by SAST (CORS, CSP headers, etc.)
+- Issues where only source code analysis found the problem but SAST tool didn't flag it
+
+**Example:**
+- ✅ TRUE: SQL injection in `login.ts:34` - SonarQube issued `AZ1EQ_E8...` + ZAP confirmed exploitation
+- ❌ NOT: CORS misconfiguration - DAST found it, but SonarQube has no issue key for this config problem
+
+**Why this matters:** Only TRUE correlations can be tagged in SonarQube because they have issue keys. DAST-only findings should be documented separately in the report.
+
 ## Overview
 
 Security testing often involves running both SAST and DAST tools independently, but manually correlating their findings is time-consuming and error-prone. This skill automates the correlation process using AI-powered analysis to:

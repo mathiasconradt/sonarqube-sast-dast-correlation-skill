@@ -26,6 +26,24 @@ Generate a comprehensive security correlation report that maps SonarQube SAST fi
 
 **📖 For detailed workflow steps, see [Workflow Steps](references/workflow-steps.md)**
 
+## ⚠️ CRITICAL: What is a TRUE Correlation?
+
+**A TRUE correlation means the issue was detected by BOTH SonarQube SAST AND DAST tools.**
+
+✅ **Requirements for TRUE correlation:**
+- Must have a valid SonarCloud/SonarQube issue key (e.g., `AZ1EQ_E8sAPSAinx9_u2`)
+- `sast_key` field must NOT be "N/A"
+- Must have a matching DAST finding from SARIF file
+- Vulnerability category must match (SQL injection ↔ SQL injection, XSS ↔ XSS, etc.)
+- Endpoint/file location must match
+
+❌ **NOT a correlation (these are DAST-only findings):**
+- DAST finding with no corresponding SAST issue key (`sast_key: "N/A"`)
+- Configuration issues detected by DAST but not flagged by SAST (CORS, CSP headers, etc.)
+- Issues found by reading source code manually but not flagged by SAST tool
+
+**Critical:** Only TRUE correlations (with valid SAST keys) can be tagged in SonarQube. DAST-only findings should be documented in Section 5 of the report, not tagged.
+
 ## ⚠️ CRITICAL: Issue Tagging Rules
 
 **Tag name:** `dast-detected` (ONLY this tag, no others!)
@@ -110,6 +128,22 @@ jq -n \
 ```
 
 After generating candidates, read the relevant source files to verify endpoint mappings and promote/demote confidence levels. Write the final result to `.sonar/correlations.json`.
+
+**⚠️ CRITICAL:** Only include correlations where the SAST issue has a valid issue key from SonarQube. If you find a vulnerability by reading source code but SonarQube didn't flag it (no issue key), classify it as a DAST-only finding, NOT a correlation. Set `sast_key: "N/A"` for DAST-only findings and save them separately to `.sonar/dast_only_high_priority.json`.
+
+**Example correlation output format:**
+```json
+{
+  "sast_key": "AZ1EQ_E8sAPSAinx9_u2",  // ✅ Valid SonarQube issue key
+  "sast_rule": "tssecurity:S3649",
+  "sast_file": "routes/login.ts",
+  "sast_line": 34,
+  "dast_source": "ZAP",
+  "dast_ruleId": "40018",
+  "category": "SQL Injection",
+  "confidence": "HIGH"
+}
+```
 
 **📖 For complete correlation rules and validation logic, see [Correlation Analysis](references/correlation-analysis.md)**
 
