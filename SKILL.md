@@ -29,8 +29,19 @@ Generate a comprehensive security correlation report that maps SonarQube SAST fi
 ## ⚠️ CRITICAL: Issue Tagging Rules
 
 **Tag name:** `dast-detected` (ONLY this tag, no others!)
-**Workflow:** Clear old tags/comments → Tag new correlations → Add detailed comments
+
+**Workflow (3-step process):**
+1. **Find & Delete ALL Old Comments** - Search for ALL issues with `dast-detected` tag, identify ALL DAST correlation comments on each issue (look for 🔴/🟠/🟡/🔵 icons or "DAST Correlation" text), delete ALL matching comments from ALL issues
+2. **Clear Old Tags** - Remove `dast-detected` tag from all issues after comments are deleted
+3. **Apply Fresh Tags & Comments** - Tag newly correlated issues and add ONE fresh comment per issue
+
 **Comment format:** `{icon} **DAST Correlation - {CONFIDENCE}**` with endpoint/parameter verification details
+
+**⚠️ IMPORTANT:** When deleting old comments, you MUST:
+- Use `additionalFields=comments` parameter when fetching issues to get comment data
+- Identify ALL comments containing DAST correlation markers (icons 🔴🟠🟡🔵 or text "DAST Correlation")
+- Delete ALL matching comments from each issue (there may be multiple old comments per issue)
+- Only proceed to tagging after ALL old comments are deleted
 
 **📖 For complete tagging workflow with API commands, see [Implementation Guide - Step 10](references/implementation-guide.md)**
 

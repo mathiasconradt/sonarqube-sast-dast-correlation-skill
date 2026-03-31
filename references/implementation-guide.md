@@ -29,31 +29,53 @@ When executing this skill:
     - **CRITICAL:** Before applying new tags, ALWAYS clean up old tags and comments first
     - **Do NOT ask the user** - this cleanup is automatic and required for data integrity
 
-    Cleanup Steps:
-    1. Fetch all issues with 'dast-detected' tag using SonarQube API:
+    Cleanup Steps (execute in this exact order):
+
+    1. **Fetch issues with additionalFields parameter:**
        ```bash
-       curl -s -u "$SONAR_TOKEN:" "{SONARQUBE_URL}/api/issues/search?componentKeys={projectKey}&tags=dast-detected&ps=500" -o existing_tagged_issues.json
+       # CRITICAL: Must include additionalFields=comments to get comment data
+       curl -s -u "$SONAR_TOKEN:" \
+         "{SONARQUBE_URL}/api/issues/search?tags=dast-detected&additionalFields=comments&ps=500" \
+         -o .sonar/existing_tagged_issues.json
        ```
-    2. For each issue found:
-       - Parse the issue response to get all comments
-       - **IMPORTANT:** Find and delete **ALL** comments that contain "DAST Correlation" (search for 🔴, 🟠, 🟡, 🔵 icons or "DAST Correlation" text in the markdown or htmlText fields)
-       - **CRITICAL:** Collect ALL matching comment keys FIRST, then delete them ALL in sequence
-       - Do NOT stop after deleting the first matching comment - an issue may have multiple old correlation comments that all need to be removed
-       - For each matching comment, delete using:
+
+    2. **Identify ALL DAST correlation comments across ALL issues:**
+       - Parse response to find ALL comments containing DAST correlation markers
+       - Search in markdown or htmlText fields for: 🔴, 🟠, 🟡, 🔵 icons OR "DAST Correlation" text
+       - **CRITICAL:** Collect ALL matching comment keys from ALL issues BEFORE deleting
+       - Example jq filter:
          ```bash
-         curl -s -u "$SONAR_TOKEN:" -X POST "{SONARQUBE_URL}/api/issues/delete_comment" \
+         jq -r '.issues[] | .key as $issue | .comments[]? |
+                select(.markdown | contains("DAST Correlation") or contains("🔴")) |
+                "Issue: \($issue) | Comment Key: \(.key)"' \
+                .sonar/existing_tagged_issues.json
+         ```
+
+    3. **Delete ALL identified comments:**
+       - **WARNING:** An issue may have multiple old correlation comments (e.g., from previous runs)
+       - Delete EVERY comment identified in step 2 using:
+         ```bash
+         curl -s -u "$SONAR_TOKEN:" -X POST \
+           "{SONARQUBE_URL}/api/issues/delete_comment" \
            -d "comment={comment_key}"
          ```
-       - After deleting all correlation comments, remove the 'dast-detected' tag using:
+       - Do NOT stop after first comment - delete ALL matching comments from ALL issues
+       - Verify deletion by re-fetching issues and checking comment count
+
+    4. **Clear tags only after ALL comments are deleted:**
+       - For each issue that had dast-detected tag:
          ```bash
-         curl -s -u "$SONAR_TOKEN:" -X POST "{SONARQUBE_URL}/api/issues/set_tags" \
+         curl -s -u "$SONAR_TOKEN:" -X POST \
+           "{SONARQUBE_URL}/api/issues/set_tags" \
            -d "issue={issue_key}" \
            -d "tags="
          ```
-    3. Report summary:
-       - Total issues that had 'dast-detected' tag
-       - Total correlation comments deleted
-       - Confirm all old tags/comments cleared before proceeding
+
+    5. **Report cleanup summary:**
+       - Total issues that had 'dast-detected' tag: X
+       - Total correlation comments deleted: Y
+       - Confirm: "✅ All old tags/comments cleared"
+       - Only proceed to Step 10c after this confirmation
 
     **Step 10c: Tag New Correlations**
     - **CRITICAL:** Use the SonarQube URL and token from step 1 (environment variables or config files)
