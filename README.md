@@ -94,10 +94,10 @@ Security testing often involves running both SAST and DAST tools independently, 
 ```bash
 # Clone this repository to your Claude Code skills directory
 cd ~/.claude/skills
-git clone https://github.com/mathiasconradt/sonarqube-sast-dast-correlation.git
+git clone https://github.com/mathiasconradt/sonarqube-sast-dast-correlation-skill.git
 
 # Or manually download and extract to:
-# ~/.claude/skills/sonarqube-sast-dast-correlation/
+# ~/.claude/skills/sonarqube-sast-dast-correlation-skill/
 ```
 
 The skill will be automatically available in Claude Code after installation.
